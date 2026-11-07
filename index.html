@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tạo Mã QR Wi-Fi Cho iPhone & Android</title>
+  <title id="pageTitle">Tạo Mã QR Wi-Fi Cho iPhone & Android</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body {
@@ -17,11 +17,40 @@
     .container {
       background: #ffffff;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       width: 100%;
       max-width: 440px;
       overflow: hidden;
-      padding: 28px 24px;
+      padding: 24px 24px 28px;
+      position: relative;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .lang-switcher {
+      display: flex;
+      background: #f1f3f5;
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lang-btn.active {
+      background: #ffffff;
+      color: #0066cc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     h1 {
       font-size: 22px;
@@ -34,7 +63,8 @@
       font-size: 13px;
       color: #666;
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
+      line-height: 1.4;
     }
     .form-group {
       margin-bottom: 16px;
@@ -96,11 +126,13 @@
       font-weight: 700;
       color: #222;
       margin-bottom: 4px;
+      word-break: break-word;
     }
     .pass-info {
       font-size: 13px;
       color: #555;
       margin-bottom: 14px;
+      word-break: break-word;
     }
     .actions {
       display: flex;
@@ -138,7 +170,7 @@
     @media print {
       body * { visibility: hidden; }
       .card-result, .card-result * { visibility: visible; }
-      .card-result { position: absolute; left: 0; top: 0; width: 100%; border: none; }
+      .card-result { position: absolute; left: 0; top: 0; width: 100%; border: none; background: white; }
       .actions, .note { display: none; }
     }
   </style>
@@ -147,29 +179,36 @@
 <body>
 
   <div class="container">
-    <h1>Tạo Mã QR Wi-Fi</h1>
-    <p class="subtitle">Quét 1 chạm để kết nối ngay trên iPhone & Android</p>
+    <div class="header-bar">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="btnVi" onclick="setLanguage('vi')">🇻🇳 Tiếng Việt</button>
+        <button class="lang-btn" id="btnEn" onclick="setLanguage('en')">🇬🇧 English</button>
+      </div>
+    </div>
+
+    <h1 id="txtTitle">Tạo Mã QR Wi-Fi</h1>
+    <p class="subtitle" id="txtSubtitle">Quét 1 chạm để kết nối ngay trên iPhone & Android</p>
 
     <div class="form-group">
-      <label for="ssid">Tên Wi-Fi (SSID)</label>
+      <label for="ssid" id="lblSsid">Tên Wi-Fi (SSID)</label>
       <input type="text" id="ssid" placeholder="Ví dụ: Asus5G_5G" value="Asus5G_5G">
     </div>
 
     <div class="form-group">
-      <label for="password">Mật khẩu Wi-Fi</label>
+      <label for="password" id="lblPassword">Mật khẩu Wi-Fi</label>
       <input type="text" id="password" placeholder="Nhập mật khẩu Wi-Fi của bạn">
     </div>
 
     <div class="form-group">
-      <label for="encryption">Chuẩn bảo mật</label>
+      <label for="encryption" id="lblEnc">Chuẩn bảo mật</label>
       <select id="encryption">
-        <option value="WPA" selected>WPA / WPA2 / WPA3 (Phổ biến nhất)</option>
-        <option value="WEP">WEP</option>
-        <option value="nopass">Không có mật khẩu</option>
+        <option value="WPA" id="optWpa" selected>WPA / WPA2 / WPA3 (Phổ biến nhất)</option>
+        <option value="WEP" id="optWep">WEP</option>
+        <option value="nopass" id="optNoPass">Không có mật khẩu</option>
       </select>
     </div>
 
-    <button class="btn-generate" onclick="generateQR()">Tạo mã QR Wi-Fi</button>
+    <button class="btn-generate" id="btnGenerate" onclick="generateQR()">Tạo mã QR Wi-Fi</button>
 
     <div class="card-result" id="cardResult">
       <div class="qr-box" id="qrcode"></div>
@@ -177,15 +216,104 @@
       <div class="pass-info" id="displayPass">Mật khẩu: ••••••••</div>
       
       <div class="actions">
-        <button class="btn-action btn-print" onclick="window.print()">In thẻ Wi-Fi</button>
-        <button class="btn-action" onclick="downloadQR()">Tải ảnh QR</button>
+        <button class="btn-action btn-print" id="btnPrint" onclick="window.print()">In thẻ Wi-Fi</button>
+        <button class="btn-action" id="btnDownload" onclick="downloadQR()">Tải ảnh QR</button>
       </div>
-      <div class="note">Mở Camera trên điện thoại iPhone hoặc Android và quét mã để tự động kết nối Wi-Fi.</div>
+      <div class="note" id="txtNote">Mở Camera trên điện thoại iPhone hoặc Android và quét mã để tự động kết nối Wi-Fi.</div>
     </div>
   </div>
 
   <script>
-    let qrInstance = null;
+    const i18n = {
+      vi: {
+        pageTitle: "Tạo Mã QR Wi-Fi Cho iPhone & Android",
+        title: "Tạo Mã QR Wi-Fi",
+        subtitle: "Quét 1 chạm để kết nối ngay trên iPhone & Android",
+        ssid: "Tên Wi-Fi (SSID)",
+        ssidPlaceholder: "Ví dụ: Asus5G_5G",
+        password: "Mật khẩu Wi-Fi",
+        passwordPlaceholder: "Nhập mật khẩu Wi-Fi của bạn",
+        encryption: "Chuẩn bảo mật",
+        wpa: "WPA / WPA2 / WPA3 (Phổ biến nhất)",
+        wep: "WEP",
+        nopass: "Không có mật khẩu (Mạng mở)",
+        btnGenerate: "Tạo mã QR Wi-Fi",
+        btnPrint: "In thẻ Wi-Fi",
+        btnDownload: "Tải ảnh QR",
+        note: "Mở Camera trên điện thoại iPhone hoặc Android và quét mã để tự động kết nối Wi-Fi.",
+        alertEmpty: "Vui lòng nhập tên Wi-Fi (SSID)!",
+        wifiLabel: "Wi-Fi: ",
+        passLabel: "Mật khẩu: ",
+        noPassText: "Không có mật khẩu"
+      },
+      en: {
+        pageTitle: "Wi-Fi QR Code Generator for iPhone & Android",
+        title: "Wi-Fi QR Code Generator",
+        subtitle: "1-tap scan to connect instantly on iPhone & Android",
+        ssid: "Wi-Fi Name (SSID)",
+        ssidPlaceholder: "e.g. Asus5G_5G",
+        password: "Wi-Fi Password",
+        passwordPlaceholder: "Enter Wi-Fi password",
+        encryption: "Security",
+        wpa: "WPA / WPA2 / WPA3 (Recommended)",
+        wep: "WEP",
+        nopass: "None (Open network)",
+        btnGenerate: "Generate Wi-Fi QR",
+        btnPrint: "Print Wi-Fi Card",
+        btnDownload: "Download QR Image",
+        note: "Open Camera on your iPhone or Android and point at the QR code to connect automatically.",
+        alertEmpty: "Please enter Wi-Fi Name (SSID)!",
+        wifiLabel: "Wi-Fi: ",
+        passLabel: "Password: ",
+        noPassText: "None"
+      }
+    };
+
+    let currentLang = 'vi';
+    let lastSsid = '';
+    let lastPass = '';
+    let lastEnc = 'WPA';
+
+    function detectUserLanguage() {
+      const savedLang = localStorage.getItem('wifi_qr_lang');
+      if (savedLang && (savedLang === 'vi' || savedLang === 'en')) {
+        return savedLang;
+      }
+      const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+      return browserLang.startsWith('vi') ? 'vi' : 'en';
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('wifi_qr_lang', lang);
+      document.documentElement.lang = lang;
+
+      const t = i18n[lang];
+      document.title = t.pageTitle;
+      document.getElementById('pageTitle').innerText = t.pageTitle;
+      document.getElementById('txtTitle').innerText = t.title;
+      document.getElementById('txtSubtitle').innerText = t.subtitle;
+      document.getElementById('lblSsid').innerText = t.ssid;
+      document.getElementById('ssid').placeholder = t.ssidPlaceholder;
+      document.getElementById('lblPassword').innerText = t.password;
+      document.getElementById('password').placeholder = t.passwordPlaceholder;
+      document.getElementById('lblEnc').innerText = t.encryption;
+      document.getElementById('optWpa').innerText = t.wpa;
+      document.getElementById('optWep').innerText = t.wep;
+      document.getElementById('optNoPass').innerText = t.nopass;
+      document.getElementById('btnGenerate').innerText = t.btnGenerate;
+      document.getElementById('btnPrint').innerText = t.btnPrint;
+      document.getElementById('btnDownload').innerText = t.btnDownload;
+      document.getElementById('txtNote').innerText = t.note;
+
+      document.getElementById('btnVi').classList.toggle('active', lang === 'vi');
+      document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+
+      if (document.getElementById('cardResult').style.display === 'block') {
+        document.getElementById('displaySsid').innerText = t.wifiLabel + lastSsid;
+        document.getElementById('displayPass').innerText = lastEnc === 'nopass' ? t.noPassText : (t.passLabel + lastPass);
+      }
+    }
 
     function escapeWiFi(str) {
       return str.replace(/([\\;,:"])/g, '\\$1');
@@ -195,13 +323,17 @@
       const ssid = document.getElementById('ssid').value.trim();
       const pass = document.getElementById('password').value;
       const enc = document.getElementById('encryption').value;
+      const t = i18n[currentLang];
 
       if (!ssid) {
-        alert("Vui lòng nhập tên Wi-Fi (SSID)!");
+        alert(t.alertEmpty);
         return;
       }
 
-      // Chuẩn QR Wi-Fi quốc tế: WIFI:T:WPA;S:SSID;P:PASSWORD;;
+      lastSsid = ssid;
+      lastPass = pass;
+      lastEnc = enc;
+
       let wifiString = `WIFI:T:${enc};S:${escapeWiFi(ssid)};`;
       if (enc !== 'nopass') {
         wifiString += `P:${escapeWiFi(pass)};`;
@@ -211,7 +343,7 @@
       const qrContainer = document.getElementById('qrcode');
       qrContainer.innerHTML = '';
 
-      qrInstance = new QRCode(qrContainer, {
+      new QRCode(qrContainer, {
         text: wifiString,
         width: 200,
         height: 200,
@@ -220,8 +352,8 @@
         correctLevel: QRCode.CorrectLevel.M
       });
 
-      document.getElementById('displaySsid').innerText = "Wi-Fi: " + ssid;
-      document.getElementById('displayPass').innerText = enc === 'nopass' ? "Không có mật khẩu" : "Mật khẩu: " + pass;
+      document.getElementById('displaySsid').innerText = t.wifiLabel + ssid;
+      document.getElementById('displayPass').innerText = enc === 'nopass' ? t.noPassText : (t.passLabel + pass);
       document.getElementById('cardResult').style.display = 'block';
     }
 
@@ -229,19 +361,24 @@
       const img = document.querySelector('#qrcode img');
       if (img && img.src) {
         const link = document.createElement('a');
-        link.download = 'wifi_qr_code.png';
+        link.download = `wifi_qr_${lastSsid || 'code'}.png`;
         link.href = img.src;
         link.click();
       } else {
         const canvas = document.querySelector('#qrcode canvas');
         if (canvas) {
           const link = document.createElement('a');
-          link.download = 'wifi_qr_code.png';
+          link.download = `wifi_qr_${lastSsid || 'code'}.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
         }
       }
     }
+
+    // Tự động nhận diện ngôn ngữ khi tải trang
+    document.addEventListener('DOMContentLoaded', () => {
+      setLanguage(detectUserLanguage());
+    });
   </script>
 </body>
 </html>
